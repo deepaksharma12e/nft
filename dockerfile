@@ -16,4 +16,4 @@ RUN npx nx build nft-bridge
 EXPOSE 3001
 ## Command to run the application
 CMD ["node", "./dist/apps/nft-bridge/main.js"]
-
+#done

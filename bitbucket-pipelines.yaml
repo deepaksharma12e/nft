@@ -1,0 +1,42 @@
+image: atlassian/default-image:3
+
+pipelines:
+  custom:
+    npx-build-steps:
+      - step:
+          name: npx-build
+          runs-on: npxrunner
+          services:
+            - docker
+          script:             
+            - docker build -t npxhost .
+            - docker tag npxhost npxhost:$BITBUCKET_COMMIT
+            - pipe: atlassian/aws-ecr-push-image:1.3.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: ap-south-1a
+                IMAGE_NAME: npxhost:$BITBUCKET_COMMIT
+                TAGS: $BITBUCKET_COMMIT
+
+        - step:
+            name: 
+            deployment: sonar-test
+            trigger: manual
+            runs-on: npxrunner
+            services:
+              - docker
+            script:              
+              - pipe: atlassian/ssh-run:0.1.3
+                variables:
+                  SSH_USER: $SSH_USER_NPX
+                  SERVER: $SERVER_NPX
+                  SSH_KEY: $SSH_KEY_NPX
+                  PORT: 22
+                  COMMAND: '$NPXSONAR_COMMAND   
+                                
+            
+definitions:
+  services:
+    docker:
+      memory: 3072
